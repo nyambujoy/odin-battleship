@@ -22,10 +22,6 @@ class Ship {
     }
 }
 
-class GameBoard {
-    constructor() {
-        this.size = 10 * 10
-    }
-}
+
 
 module.exports = Ship;
