@@ -1,55 +1,50 @@
-require('./ship')
+const Ship = require('./ship');
 
 class GameBoard {
     constructor() {
-        this.board = Array(10).fill(null).map(() => Array(10).fill(null));
-        this.ships = []
+        this.height = 10;
+        this.width = 10;
+        this.board = Array.from({ length: this.height }, () => Array(this.width).fill(null));
         this.missedAttacks = [];
+        this.ships = [];
     }
+
     placeShip(ship, startRow, startCol, orientation) {
-        // check wheteher the ship can be placed on the borad
-        for (let i = 0; i < ship.length; i++) {
-            let row = startRow
-            let col = startCol
-
-            if (orientation === 'horizontal') {
-                col += i
-            } else if (orientation === 'vertical') {
-                row += i
+        if (this.canPlaceShip(ship, startRow, startCol, orientation)) {
+            for (let i = 0; i < ship.length; i++) {
+                const row = orientation === 'horizontal' ? startRow : startRow + i;
+                const col = orientation === 'horizontal' ? startCol + i : startCol;
+                this.board[row][col] = ship;
             }
-
-            if (row >= 10 || col >= 10 || this.board[row][col] !== null) {
-                throw new Error('Cannot place ship at these coordinates.');
-            }
+            this.ships.push(ship);
+            return true;
         }
-
-        // place the ship
-        for (let i = 0; i < ship.length; i++) {
-            let row = startRow;
-            let col = startCol;
-
-            if (orientation === 'horizontal') {
-                col += i;
-            } else if (orientation === 'vertical') {
-                row += i;
-            }
-
-            this.board[row][col] = ship;
-        }
-
-        this.ships.push(ship);
+        return false;
     }
+
+    canPlaceShip(ship, startRow, startCol, orientation) {
+        for (let i = 0; i < ship.length; i++) {
+            const row = orientation === 'horizontal' ? startRow : startRow + i;
+            const col = orientation === 'horizontal' ? startCol + i : startCol;
+
+            // Check if within bounds and not overlapping another ship
+            if (row >= this.height || col >= this.width || this.board[row][col] !== null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     receiveAttack(row, col) {
         const target = this.board[row][col];
 
-        // Check if the target is a Ship object and not a hit/miss marker
         if (target && typeof target.isHit === 'function') {
             target.isHit();
-            this.board[row][col] = 'hit'; // Mark this position as hit
+            this.board[row][col] = 'hit'; // Mark as hit
             return true; // Hit
         } else {
-            if (!this.board[row][col] || this.board[row][col] !== 'miss') {
-                this.board[row][col] = 'miss'; // Mark this position as miss
+            if (this.board[row][col] !== 'miss') {
+                this.board[row][col] = 'miss'; // Mark as miss
                 this.missedAttacks.push({ row, col });
             }
             return false; // Miss
@@ -57,8 +52,8 @@ class GameBoard {
     }
 
     allShipsSunk() {
-        return this.ships.every(ship => ship.isSunk())
+        return this.ships.every(ship => ship.isSunk());
     }
 }
 
-module.exports = GameBoard
+module.exports = GameBoard;
